@@ -1,0 +1,21 @@
+{
+  "name": "db-row-parser",
+  "version": "1.0.0",
+  "description": "A simple module to convert row (array) from result of SQL query to an object.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node_modules/.bin/mocha 'specs/**/*.js'"
+  },
+  "keywords": [
+    "Database",
+    "row",
+    "parser",
+    "object",
+    "mapping"
+  ],
+  "author": "Pascal Lambert",
+  "license": "ISC",
+  "devDependencies": {
+    "mocha": "^2.3.4"
+  }
+}
