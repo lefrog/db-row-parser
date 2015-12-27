@@ -25,22 +25,36 @@ util.inherits(DbRowParser, events.EventEmitter);
 
 module.exports = DbRowParser;
 
+DbRowParser.prototype.done = function() {
+    if (this._currentObj == null) {
+        return;
+    }
+
+    this.emit("new-object", this._currentObj);
+}
+
 DbRowParser.prototype.parseRow = function(row) {
     let key = row[this._keyIndice];
 
     if (key === this._previousKey) {
         this._buildChildObject(row);
-        return;
+        return this._currentObj;
     }
 
     if (key == null) {
+        this.done();
+        this._currentObj = null;
         return;
+    }
+
+    if (key !== this._previousKey) {
+        this.done();
+        this._currentObj = null;
     }
 
     this._previousKey = key;
 
     this._currentObj = this._buildObject(row);
-    this.emit("new-object", this._currentObj);
 
     return this._currentObj;
 }
@@ -50,6 +64,10 @@ DbRowParser.prototype._buildObject = function(row) {
     this._processComplexProperties(obj, this._complexProps, row);
 
     return obj;
+}
+
+DbRowParser.prototype._buildChildObject = function(row) {
+    this._processComplexProperties(this._currentObj, this._complexProps, row);
 }
 
 DbRowParser.prototype._processCoreProperties = function(props, row) {
