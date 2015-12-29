@@ -13,7 +13,7 @@ describe("DbRowParser", function() {
 
         before(function() {
             authorParser = new DbRowParser({
-                keyIndice: 0,
+                key: 0,
                 properties: {
                     "authorId": 0,
                     "name": 1
@@ -26,7 +26,7 @@ describe("DbRowParser", function() {
             });
 
             authorParser.parseRow(row);
-            authorParser.done();
+            authorParser.end();
         });
         it("should emit 1 object", function(done) {
             assert.equal(objectCounter, 1);
@@ -46,7 +46,7 @@ describe("DbRowParser", function() {
 
         before(function() {
             blogParser = new DbRowParser({
-                keyIndice: 2,
+                key: 2,
                 properties: {
                     "blogId": 2,
                     "text": 3
@@ -54,7 +54,7 @@ describe("DbRowParser", function() {
             });
 
             authorParser = new DbRowParser({
-                keyIndice: 0,
+                key: 0,
                 properties: {
                     "authorId": 0,
                     "name": 1,
@@ -87,7 +87,7 @@ describe("DbRowParser", function() {
 
         before(function(done) {
             blogParser = new DbRowParser({
-                keyIndice: 2,
+                key: 2,
                 properties: {
                     "blogId": 2,
                     "text": 3
@@ -95,7 +95,7 @@ describe("DbRowParser", function() {
             });
 
             authorParser = new DbRowParser({
-                keyIndice: 0,
+                key: 0,
                 properties: {
                     "authorId": 0,
                     "name": 1,
@@ -112,7 +112,7 @@ describe("DbRowParser", function() {
             });
             authorParser.parseRow(row1);
             authorParser.parseRow(row2);
-            authorParser.done();
+            authorParser.end();
         });
         it("should have mapped author", function() {
             assert.equal(result.authorId, 1);
@@ -143,7 +143,7 @@ describe("DbRowParser", function() {
 
         before(function(done) {
             blogParser = new DbRowParser({
-                keyIndice: 2,
+                key: 2,
                 properties: {
                     "blogId": 2,
                     "text": 3
@@ -151,7 +151,7 @@ describe("DbRowParser", function() {
             });
 
             authorParser = new DbRowParser({
-                keyIndice: 0,
+                key: 0,
                 properties: {
                     "authorId": 0,
                     "name": 1,
@@ -174,7 +174,7 @@ describe("DbRowParser", function() {
             rows.forEach(row => {
                 authorParser.parseRow(row);
             });
-            authorParser.done();
+            authorParser.end();
         });
 
         it("should have mapped author1", function() {
@@ -216,7 +216,7 @@ describe("DbRowParser", function() {
 
         before(function(done) {
             addressParser = new DbRowParser({
-                keyIndice: 4,
+                key: 4,
                 properties: {
                     "id": 4,
                     "street": 5
@@ -224,7 +224,7 @@ describe("DbRowParser", function() {
             });
 
             blogParser = new DbRowParser({
-                keyIndice: 2,
+                key: 2,
                 properties: {
                     "blogId": 2,
                     "text": 3
@@ -232,7 +232,7 @@ describe("DbRowParser", function() {
             });
 
             authorParser = new DbRowParser({
-                keyIndice: 0,
+                key: 0,
                 properties: {
                     "authorId": 0,
                     "name": 1,
@@ -258,7 +258,7 @@ describe("DbRowParser", function() {
             rows.forEach(row => {
                 authorParser.parseRow(row);
             });
-            authorParser.done();
+            authorParser.end();
         });
 
         it("should have mapped author1", function() {

@@ -16,6 +16,7 @@
   "author": "Pascal Lambert",
   "license": "ISC",
   "devDependencies": {
-    "mocha": "^2.3.4"
+    "mocha": "^2.3.4",
+    "through2": "^2.0.0"
   }
 }

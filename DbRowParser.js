@@ -10,7 +10,7 @@ const DbRowParser = function(options) {
 
     events.EventEmitter.call(this);
 
-    this._keyIndice = options.keyIndice;
+    this._key = options.key || 0;
     let a = this._splitCoreFromComplexProperties(options.properties);
     this._coreProps = a[0];
     this._complexProps = a[1];
@@ -25,7 +25,7 @@ util.inherits(DbRowParser, events.EventEmitter);
 
 module.exports = DbRowParser;
 
-DbRowParser.prototype.done = function() {
+DbRowParser.prototype.end = function() {
     if (this._currentObj == null) {
         return;
     }
@@ -34,7 +34,7 @@ DbRowParser.prototype.done = function() {
 }
 
 DbRowParser.prototype.parseRow = function(row) {
-    let key = row[this._keyIndice];
+    let key = row[this._key];
 
     if (key === this._previousKey) {
         this._buildChildObject(row);
@@ -42,13 +42,13 @@ DbRowParser.prototype.parseRow = function(row) {
     }
 
     if (key == null) {
-        this.done();
+        this.end();
         this._currentObj = null;
         return;
     }
 
     if (key !== this._previousKey) {
-        this.done();
+        this.end();
         this._currentObj = null;
     }
 
