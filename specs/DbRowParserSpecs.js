@@ -39,6 +39,37 @@ describe("DbRowParser", function() {
         });
     });
 
+    describe("#constructor with invalid child configuration", function() {
+        it("should throw an exception", function() {
+            assert.throws(() => {new DbRowParser({
+                properties: {
+                    name: 1,
+                    bad: {
+                    }
+                }
+            })}, /bad.*undefined/i);
+        });
+    });
+
+    describe("#parseRow with property as function", function() {
+        let row;
+        before(function() {
+            let parser = new DbRowParser({
+                properties: {
+                    foo: function(arr) {
+                        return "Hi " + arr[0];
+                    }
+                }
+            });
+
+            row = parser.parseRow(["Foo"]);
+        });
+
+        it("should transform property", function() {
+            assert.equal(row.foo, "Hi Foo");
+        });
+    });
+
     describe("#parseRow 1 author 1 blog", function() {
         let row = [1, "foo@example.com", 10, "This would be a blog post"];
         var authorParser, blogParser;

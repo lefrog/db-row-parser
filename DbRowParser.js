@@ -75,7 +75,11 @@ DbRowParser.prototype._processCoreProperties = function(props, row) {
 
     for (var pName in props) {
         let i = props[pName];
-        obj[pName] = row[i];
+        if ((typeof i) === "function") {
+            obj[pName] = i(row);
+        } else {
+            obj[pName] = row[i];
+        }
     }
 
     return obj;
@@ -103,13 +107,14 @@ DbRowParser.prototype._splitCoreFromComplexProperties = function(propertyDef) {
     let coreProps = {};
     let complexProps = {};
 
-    for (var pName in propertyDef) {
+    for (let pName in propertyDef) {
         let i = propertyDef[pName];
 
         if ((typeof i) === "object") {
             let parser = i.parser;
             if (!(parser instanceof DbRowParser)) {
-                throw new Error(`Unknown Parser for property {pName}: ` + typeof parser);
+                let t = typeof parser;
+                throw new Error(`Unknown Parser for property "${pName}": ${t}`);
             }
             complexProps[pName] = i;
         } else {

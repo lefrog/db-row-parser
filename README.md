@@ -59,7 +59,8 @@ A row parser to convert a flatten object (array) into an Object graph.
 * ```options```
 
    * ```key: integer``` Indicate the Array index of the object key. Basically the "field" the parser will look to detect if processing a new object. Default is 0.
-   * ```properties: Object``` Provide mapping configuration of the array to resulting object. For each property of the object we are trying to rebuild, put the integer array index where to find the the value in the array or a complex property definition.
+   * ```properties: Object``` Provide mapping configuration of the array to resulting object. For each property of the object we are trying to rebuild, put the integer array index where to find the the value in the array, a ```transformation function``` or a ```complex property``` definition.
+   * ```transformation function: function(row)``` a function accepting 1 argument, the array, and returning the value we want to get.
    * ```complex property``` An object with
       * ```parser: DbRowParser``` property to express parsing of child object (e.g. main object is User and child object is Address).
       * ```many: bool``` Indicate if there will be many of this object. For example the primary parser could for Blog Post with a property of ```comments``` which would be express using another ```DbRowParser``` and with property ```many: true```. Default is false.
