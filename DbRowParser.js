@@ -11,19 +11,27 @@ const DbRowParser = function(options) {
     events.EventEmitter.call(this);
 
     this._key = options.key || 0;
-    let a = this._splitCoreFromComplexProperties(options.properties);
-    this._coreProps = a[0];
-    this._complexProps = a[1];
+
+    if (!options.properties) {
+        this._parser = new SingleValueParser(options);
+    } else if (Array.isArray(options.properties)) {
+        this._parser = new ObjectParser(options);
+    } else {
+        this._parser = new ArrayParser(options);
+    }
 
     this._previousKey = null;
     this._currentObj = null;
-
-    this._subParser
 }
 
 util.inherits(DbRowParser, events.EventEmitter);
 
 module.exports = DbRowParser;
+
+// HACK: circular reference. Must be after module.exports.
+const SingleValueParser = require("./SingleValueParser");
+const ArrayParser = require("./ArrayParser");
+const ObjectParser = require("./ObjectParser");
 
 DbRowParser.prototype.end = function() {
     if (this._currentObj == null) {
@@ -37,7 +45,7 @@ DbRowParser.prototype.parseRow = function(row) {
     let key = row[this._key];
 
     if (key === this._previousKey) {
-        this._buildChildObject(row);
+        this._parser.buildChildObject(this._currentObj, row);
         return this._currentObj;
     }
 
@@ -54,73 +62,14 @@ DbRowParser.prototype.parseRow = function(row) {
 
     this._previousKey = key;
 
-    this._currentObj = this._buildObject(row);
+    this._currentObj = this._parser.buildObject(row);
 
     return this._currentObj;
 }
 
-DbRowParser.prototype._buildObject = function(row) {
-    let obj = this._processCoreProperties(this._coreProps, row);
-    this._processComplexProperties(obj, this._complexProps, row);
-
-    return obj;
-}
-
-DbRowParser.prototype._buildChildObject = function(row) {
-    this._processComplexProperties(this._currentObj, this._complexProps, row);
-}
-
-DbRowParser.prototype._processCoreProperties = function(props, row) {
-    let obj = {};
-
-    for (var pName in props) {
-        let i = props[pName];
-        if ((typeof i) === "function") {
-            obj[pName] = i(row);
-        } else {
-            obj[pName] = row[i];
-        }
+DbRowParser.assertIsParser = function(pName, parser) {
+    if (!(parser instanceof DbRowParser)) {
+        let t = typeof parser;
+        throw new Error(`Unknown Parser for property "${pName}": ${t}`);
     }
-
-    return obj;
-}
-
-DbRowParser.prototype._processComplexProperties = function(obj, props, row) {
-    for (var pName in props) {
-        let pDef = props[pName];
-        let parser = pDef.parser;
-
-        let v = parser.parseRow(row);
-
-        if (pDef.many) {
-            if (!obj[pName]) {
-                obj[pName] = [];
-            }
-            obj[pName].push(v);
-        } else {
-            obj[pName] = v;
-        }
-    }
-}
-
-DbRowParser.prototype._splitCoreFromComplexProperties = function(propertyDef) {
-    let coreProps = {};
-    let complexProps = {};
-
-    for (let pName in propertyDef) {
-        let i = propertyDef[pName];
-
-        if ((typeof i) === "object") {
-            let parser = i.parser;
-            if (!(parser instanceof DbRowParser)) {
-                let t = typeof parser;
-                throw new Error(`Unknown Parser for property "${pName}": ${t}`);
-            }
-            complexProps[pName] = i;
-        } else {
-            coreProps[pName] = i;
-        }
-    }
-
-    return [coreProps, complexProps];
 }

@@ -1,27 +1,47 @@
 # db-row-parser
 
-Simple "row" parser that transform a row (basically an array) into an object graph.
+Simple "row" parser that transform a row (basically an array or a "flatten" Javascript Object) into an object graph.
 
-For example if we have a row like:
+For example if we have rows like:
 ```
-let row = [1, "foo", "123 on the street", "In a City"];
+let rows = [
+  [1, "Pascal", "123 on the street", "In a City", 12345, 10, "My First Blog"],
+  [1, "Pascal", "123 on the street", "In a City", 12345, 20, "My Second Blog"]
+];
 ```
 
 And we want to make it into an object graph like:
 ```
 {
   userId: 1,
-  username: "foo",
+  username: "Pascal",
   address: {
     street: "123 on the street",
     city: "In a City"
-  }
+  },
+  dob: "Wed Dec 31 1969 17:00:12 GMT-0700 (MST)",
+  blogs: [
+    {
+      blogId: 10,
+      text: "My First Blog"
+    },
+    {
+      blogId: 20,
+      text: "My Second Blog"
+    }
+  ]
 }
 ```
 
-We can configure our parser like this:
-
+We can configure our parsers like this:
 ```
+let blogParser = new DbRowParser({
+  key: 5,
+  properties: {
+    blogId: 5,
+    text: 6
+  }
+});
 let addressParser = new DbRowParser({
   key: 2,
   properties: {
@@ -29,23 +49,105 @@ let addressParser = new DbRowParser({
     city: 3
   }
 });
-
 let userParser = new DbRowParser({
   key: 0,
   properties: {
     userId: 0,
     username: 1,
-    address: {
-      parser: addressParser,
-      many: false
-    }
+    address: addressParser,     // for complex property we can reference another parser
+    blogs: [blogParser],        // if there will multiple "children", reference another parser but put it an array to let the parent parser know there is going to be more than one
+    dob: function(row) { return new Date(row[4]).toString(); }   // can use simple "transformation" function
   }
 });
 ```
 
 And than parse the row(s):
 ```
-let user = userParser.parseRow(row);
+userParser.on("new-object", obj => {
+  console.log(obj);
+});
+rows.forEach(row => {
+  userParser.parseRow(row);
+});
+userParser.end();
+```
+
+Support also rows of "flatten" Javascript Object. For example if we have rows like:
+```
+let rows = [
+  {
+    userId: 1, username: "Pascal", street: "123 on the street", city: "In a City", dob: 12345, blogId: 10, text: "My First Blog"  
+  },
+  {
+    userId: 1, username: "Pascal", street: "123 on the street", city: "In a City", dob: 12345, blogId: 20, text: "My Second Blog"
+  }
+];
+```
+And we want to make it into an object graph like we did above using rows of "array",
+
+We can configure our parsers like this:
+```
+let blogParser = new DbRowParser({
+  key: "blogId",
+  properties: ["blogId", "text"]
+});
+let addressParser = new DbRowParser({
+  key: "street",
+  properties: ["street", "city"]
+});
+
+let userParser = new DbRowParser({
+  key: "userId",
+  properties: [                 // this time we use an array to list the properties we want to extract for each row
+    "userId", "username",       // for simple property, we just need to list their name
+    {
+      address: addressParser    // for "complex" property we use an object with only 1 property and reference another parser
+    },
+    {
+      blogs: [blogParser]       // when there will be multiple children, reference another parser but inside an array
+    },
+    {
+      dob: function(row) { return new Date(row.dob).toString(); }   // as before we can still use "transformation" function for simple property
+    }
+  ]
+});
+```
+
+If a child property is a collection of single values, we can configure a parser with just a ```key``` attribute. For example suppose we have the following rows;
+```
+let rows = [                        // I'm using rows of array but work as well with "flatten" Javascript Object
+  ["Pascal", "Fly Fishing"],
+  ["Pascal", "X-Country Skiing"],
+  ["Patricia", "Puzzle"]
+]
+```
+
+And we want to turn them into something like this;
+```
+[
+  {
+    name: "Pascal",
+    hobbies: ["Fly Fishing", "X-Country Skiing"]
+  },
+  {
+    name: "Patricia",
+    hobbies: ["Puzzle"]
+  }
+]
+```
+
+We can configure our parsers like this;
+```
+let hobbyParser = new DbRowParser({
+  key: 1
+});
+let personParser = new DbRowParser({
+  key: 0,
+  properties: {
+    name: 0,
+    hobbies: [hobbyParser]
+  }
+});
 ```
 
 ## API
@@ -58,12 +160,16 @@ A row parser to convert a flatten object (array) into an Object graph.
 
 * ```options```
 
-   * ```key: integer``` Indicate the Array index of the object key. Basically the "field" the parser will look to detect if processing a new object. Default is 0.
-   * ```properties: Object``` Provide mapping configuration of the array to resulting object. For each property of the object we are trying to rebuild, put the integer array index where to find the the value in the array, a ```transformation function``` or a ```complex property``` definition.
-   * ```transformation function: function(row)``` a function accepting 1 argument, the array, and returning the value we want to get.
-   * ```complex property``` An object with
-      * ```parser: DbRowParser``` property to express parsing of child object (e.g. main object is User and child object is Address).
-      * ```many: bool``` Indicate if there will be many of this object. For example the primary parser could for Blog Post with a property of ```comments``` which would be express using another ```DbRowParser``` and with property ```many: true```. Default is false.
+   * ```key: integer|string``` Indicate the Array index or the property name of the object key. Basically the "field" the parser will look to detect if processing a new object. Default is 0.
+   * ```properties: Object|Array``` Provide mapping configuration of the object to "inflate". Depending if parsing rows of "flatten" Javascript Object use an array ([]) to describe each property or an Object if each rows is an array of values. For each property of the object we want to rebuild;
+      * for simple property; put the integer array index where to find the value in the array (when parsing array) or just the name of the property (when parsing "flatten" Javascript Object) or
+      * a ```transformation function``` or
+      * a ```complex property``` definition.
+   * ```transformation function: function(row)``` a function accepting 1 argument, the row, and returning the value we want to get.
+   * ```complex property``` Can;
+      * reference another parser for single child object or
+      * reference another parser but inside an array in order to signal the parser there is going to be multiple children using this parser.
+
 
 #### DbRowParser.parseRow(array)
 Return inflated object from the array.

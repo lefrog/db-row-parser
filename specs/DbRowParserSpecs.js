@@ -4,7 +4,7 @@ const assert = require('assert');
 
 const DbRowParser = require("../DbRowParser");
 
-describe("DbRowParser", function() {
+describe("DbRowParser - Array like rows", function() {
     describe("#parseRow single object", function() {
         let objectCounter = 0;
         let result = null;
@@ -41,13 +41,14 @@ describe("DbRowParser", function() {
 
     describe("#constructor with invalid child configuration", function() {
         it("should throw an exception", function() {
-            assert.throws(() => {new DbRowParser({
-                properties: {
-                    name: 1,
-                    bad: {
+            assert.throws(() => {
+                new DbRowParser({
+                    properties: {
+                        name: 1,
+                        bad: {}
                     }
-                }
-            })}, /bad.*undefined/i);
+                })
+            }, /bad.*object/i);
         });
     });
 
@@ -70,6 +71,38 @@ describe("DbRowParser", function() {
         });
     });
 
+    describe("#parseRow with single value child parser", function() {
+        let result;
+        before(function(done) {
+            let colorParser = new DbRowParser({
+                key: 1
+            });
+            let parser = new DbRowParser({
+                key: 0,
+                properties: {
+                    id: 0,
+                    favoriteColors: [colorParser]
+                }
+            });
+
+            parser.on("new-object", function(obj) {
+                result = obj;
+                done();
+            });
+
+            parser.parseRow([1, "Blue"]);
+            parser.parseRow([1, "Green"]);
+            parser.end();
+        });
+
+        it("should have my 2 favorite colors", function() {
+            assert.ok(Array.isArray(result.favoriteColors));
+            assert.equal(result.favoriteColors.length, 2);
+            assert.equal(result.favoriteColors[0], "Blue");
+            assert.equal(result.favoriteColors[1], "Green");
+        });
+    });
+
     describe("#parseRow 1 author 1 blog", function() {
         let row = [1, "foo@example.com", 10, "This would be a blog post"];
         var authorParser, blogParser;
@@ -89,10 +122,7 @@ describe("DbRowParser", function() {
                 properties: {
                     "authorId": 0,
                     "name": 1,
-                    "blogs": {
-                        parser: blogParser,
-                        many: true
-                    }
+                    "blogs": [blogParser]
                 }
             });
 
@@ -130,10 +160,7 @@ describe("DbRowParser", function() {
                 properties: {
                     "authorId": 0,
                     "name": 1,
-                    "blogs": {
-                        parser: blogParser,
-                        many: true
-                    }
+                    "blogs": [blogParser]
                 }
             });
 
@@ -186,10 +213,7 @@ describe("DbRowParser", function() {
                 properties: {
                     "authorId": 0,
                     "name": 1,
-                    "blogs": {
-                        parser: blogParser,
-                        many: true
-                    }
+                    "blogs": [blogParser]
                 }
             });
 
@@ -267,13 +291,8 @@ describe("DbRowParser", function() {
                 properties: {
                     "authorId": 0,
                     "name": 1,
-                    "blogs": {
-                        parser: blogParser,
-                        many: true
-                    },
-                    "address": {
-                        parser: addressParser
-                    }
+                    "blogs": [blogParser],
+                    "address": addressParser
                 }
             });
 
@@ -309,6 +328,52 @@ describe("DbRowParser", function() {
             assert.equal(author2.authorId, 2);
             assert.equal(author2.name, "bar@example.com");
             assert.ok(Array.isArray(author2.blogs));
+        });
+    });
+});
+
+describe("DbRowParser - Object like rows", function() {
+    describe("#parseRow 1 parent 1 child", function() {
+        let result = null;
+
+        before(function(done) {
+            let addressParser = new DbRowParser({
+                key: "street",
+                properties: ["street", "city"]
+            });
+            let authorParser = new DbRowParser({
+                key: "authorId",
+                properties: ["authorId", "name", {
+                    dob: function(row) {
+                        return new Date(row.dob).toString();
+                    }
+                }, {
+                    address: addressParser
+                }]
+            });
+
+            authorParser.on("new-object", (obj) => {
+                result = obj;
+                done();
+            });
+
+            let row = {
+                authorId: 1,
+                name: "Pascal",
+                dob: 12345,
+                street: "123 on the street",
+                city: "in a nice city"
+            };
+
+            authorParser.parseRow(row);
+            authorParser.end();
+        });
+        it("should have mapped properly the row", function() {
+            assert.equal(result.authorId, 1);
+            assert.equal(result.name, "Pascal");
+            assert.equal(result.dob, "Wed Dec 31 1969 17:00:12 GMT-0700 (MST)");
+            assert.equal(result.address.street, "123 on the street");
+            assert.equal(result.address.city, "in a nice city");
         });
     });
 });

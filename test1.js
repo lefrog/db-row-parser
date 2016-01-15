@@ -4,16 +4,19 @@ const through = require('through2');
 const DbRowParser = require("./DbRowParser");
 const DbRowParserStream = require("./DbRowParserStream");
 
-let parser = new DbRowParser({
-    key: 0,
-    properties: {
-        id: 0,
-        name: 1
-    }
+let hobby = new DbRowParser({
+    key: "hobbyId",
+    properties: ["hobbyId", "hobbyName"]
+});
+let person = new DbRowParser({
+    key: "id",
+    properties: ["id", "name", {
+        hobbies: [hobby]
+    }]
 });
 
 let stream = new DbRowParserStream({
-    rowParser: parser
+    rowParser: person
 });
 
 let t = through.obj(
@@ -26,7 +29,34 @@ stream
     .pipe(t)
     .pipe(process.stdout);
 
-stream.write([1, "Pascal"]);
-stream.write([2, "Patricia"]);
-stream.write([3, "Mackenzie"]);
+let data = [{
+    id: 1,
+    name: "Pascal",
+    hobbyId: 10,
+    hobbyName: "Fly Fishing"
+}, {
+    id: 1,
+    name: "Pascal",
+    hobbyId: 11,
+    hobbyName: "Cross Country Skiing"
+}, {
+    id: 2,
+    name: "Patricia",
+    hobbyId: 20,
+    hobbyName: "Movie"
+}, {
+    id: 2,
+    name: "Patricia",
+    hobbyId: 21,
+    hobbyName: "Puzzle"
+}, {
+    id: 3,
+    name: "Mackenzie",
+    hobbyId: 30,
+    hobbyName: "Reading"
+}];
+
+data.forEach((d) => {
+    stream.write(d);
+});
 stream.end(null);
