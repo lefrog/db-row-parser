@@ -12,7 +12,8 @@
     "row",
     "parser",
     "object",
-    "mapping"
+    "mapping",
+    "inflate"
   ],
   "author": "Pascal Lambert",
   "license": "ISC",
