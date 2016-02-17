@@ -6,7 +6,7 @@ Simple "row" parser that transform a row (basically an array or a "flatten" Java
 
 For example if we have rows like:
 ```
-const DbRowParser = require("DbRowParser");
+const DbRowParser = require("db-row-parser").DbRowParser;
 
 let rows = [
   [1, "Pascal", "123 on the street", "In a City", 12345, 10, "My First Blog"],
@@ -234,24 +234,27 @@ And after parsing the 3rd row calling ```.end()``` will emit the object for the 
 Streaming API for the parser.
 
 ```
-  let parser = new DbRowParser({
-    ...
-  });
+const DbRowParser = require("db-row-parser").DbRowParser;
+const DbRowParserStream = require("db-row-parser").DbRowParserStream;
 
-  let streamParser = new DbRowParserStream({
-    rowParser: parser
-  });
+let parser = new DbRowParser({
+  ...
+});
 
-  let csvStream = csv({
-    // csv parser configuration for example fast-csv
-  });
+let streamParser = new DbRowParserStream({
+  rowParser: parser
+});
 
-  let fileStream = fs.createReadStream("blogs.csv");
+let csvStream = csv({
+  // csv parser configuration for example fast-csv
+});
 
-  fileStream
-    .pipe(csvStream)
-    .pipe(streamParser)
-    .pipe(toSomethingElse);
+let fileStream = fs.createReadStream("blogs.csv");
+
+fileStream
+  .pipe(csvStream)
+  .pipe(streamParser)
+  .pipe(toSomethingElse);
 ```
 
 #### Constructor: new DbRowParserStream(options)
