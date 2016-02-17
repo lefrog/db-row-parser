@@ -2,8 +2,12 @@
 
 Simple "row" parser that transform a row (basically an array or a "flatten" Javascript Object) into an object graph.
 
+## Parse Array
+
 For example if we have rows like:
 ```
+const DbRowParser = require("DbRowParser");
+
 let rows = [
   [1, "Pascal", "123 on the street", "In a City", 12345, 10, "My First Blog"],
   [1, "Pascal", "123 on the street", "In a City", 12345, 20, "My Second Blog"]
@@ -72,6 +76,8 @@ rows.forEach(row => {
 userParser.end();
 ```
 
+## Parse Flatten Object
+
 Support also rows of "flatten" Javascript Object. For example if we have rows like:
 ```
 let rows = [
@@ -112,6 +118,7 @@ let userParser = new DbRowParser({
   ]
 });
 ```
+## Single value collection
 
 If a child property is a collection of single values, we can configure a parser with just a ```key``` attribute. For example suppose we have the following rows;
 ```
