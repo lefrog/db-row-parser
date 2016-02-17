@@ -1,6 +1,6 @@
 {
   "name": "db-row-parser",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A simple module to convert row (array) from result of SQL query or from a csv parser to an object.",
   "main": "index.js",
   "scripts": {
