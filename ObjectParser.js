@@ -93,7 +93,7 @@ ObjectParser.prototype._processFunctionsProperties = function(obj, props, row) {
 
 ObjectParser.prototype._processComplexProperties = function(obj, props, row) {
     props.forEach(pDef => {
-        let v = pDef.parser.parseRow(row);
+        let v = pDef.parser.parse(row);
 
         if (pDef.many) {
             if (!obj[pDef.name]) {

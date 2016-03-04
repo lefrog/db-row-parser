@@ -78,7 +78,7 @@ ArrayParser.prototype._processComplexProperties = function(obj, props, row) {
         let pDef = props[pName];
         let parser = pDef.parser;
 
-        let v = parser.parseRow(row);
+        let v = parser.parse(row);
 
         if (pDef.many) {
             if (!obj[pName]) {

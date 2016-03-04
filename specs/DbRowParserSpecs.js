@@ -25,7 +25,7 @@ describe("DbRowParser - Array like rows", function() {
                 result = obj;
             });
 
-            authorParser.parseRow(row);
+            authorParser.parse(row);
             authorParser.end();
         });
         it("should emit 1 object", function(done) {
@@ -63,7 +63,7 @@ describe("DbRowParser - Array like rows", function() {
                 }
             });
 
-            row = parser.parseRow(["Foo"]);
+            row = parser.parse(["Foo"]);
         });
 
         it("should transform property", function() {
@@ -90,8 +90,8 @@ describe("DbRowParser - Array like rows", function() {
                 done();
             });
 
-            parser.parseRow([1, "Blue"]);
-            parser.parseRow([1, "Green"]);
+            parser.parse([1, "Blue"]);
+            parser.parse([1, "Green"]);
             parser.end();
         });
 
@@ -126,7 +126,7 @@ describe("DbRowParser - Array like rows", function() {
                 }
             });
 
-            result = authorParser.parseRow(row);
+            result = authorParser.parse(row);
         });
         it("should have mapped author", function() {
             assert.equal(result.authorId, 1);
@@ -168,8 +168,8 @@ describe("DbRowParser - Array like rows", function() {
                 result = author;
                 done();
             });
-            authorParser.parseRow(row1);
-            authorParser.parseRow(row2);
+            authorParser.parse(row1);
+            authorParser.parse(row2);
             authorParser.end();
         });
         it("should have mapped author", function() {
@@ -227,7 +227,7 @@ describe("DbRowParser - Array like rows", function() {
             });
 
             rows.forEach(row => {
-                authorParser.parseRow(row);
+                authorParser.parse(row);
             });
             authorParser.end();
         });
@@ -306,7 +306,7 @@ describe("DbRowParser - Array like rows", function() {
             });
 
             rows.forEach(row => {
-                authorParser.parseRow(row);
+                authorParser.parse(row);
             });
             authorParser.end();
         });
@@ -336,9 +336,11 @@ describe("DbRowParser - Array like rows", function() {
         });
     });
 
-    describe("when re-use parser on different set of rows", function() {
-        let firstSet = [1, "Parent 1", 10, "Child 10"];
-        let secondSet = [2, "Parent 2", 20, "Child 20"];
+    describe("when re-use parser on same set of rows", function() {
+        let rows = [
+            [1, "Parent 1", 10, "Child 10"],
+            [1, "Parent 1", 20, "Child 20"]
+        ];
 
         let childParser = new DbRowParser({
             key: 2,
@@ -363,25 +365,33 @@ describe("DbRowParser - Array like rows", function() {
         });
 
         it("should parser ok the first time", function() {
-            parentParser.parseRow(firstSet);
-            parentParser.end();
+            rows.forEach(row => {
+                parentParser.parse(row);
+            });
+            parentParser.done();
 
             assert.equal(1, newObject.id);
             assert.equal("Parent 1", newObject.name);
-            assert.equal(1, newObject.children.length);
+            assert.equal(2, newObject.children.length);
             assert.equal(10, newObject.children[0].id);
             assert.equal("Child 10", newObject.children[0].name);
+            assert.equal(20, newObject.children[1].id);
+            assert.equal("Child 20", newObject.children[1].name);
         });
 
         it("should parser ok the second time", function() {
-            parentParser.parseRow(secondSet);
-            parentParser.end();
+            rows.forEach(row => {
+                parentParser.parse(row);
+            });
+            parentParser.done();
 
-            assert.equal(2, newObject.id);
-            assert.equal("Parent 2", newObject.name);
-            assert.equal(1, newObject.children.length);
-            assert.equal(20, newObject.children[0].id);
-            assert.equal("Child 20", newObject.children[0].name);
+            assert.equal(1, newObject.id);
+            assert.equal("Parent 1", newObject.name);
+            assert.equal(2, newObject.children.length);
+            assert.equal(10, newObject.children[0].id);
+            assert.equal("Child 10", newObject.children[0].name);
+            assert.equal(20, newObject.children[1].id);
+            assert.equal("Child 20", newObject.children[1].name);
         });
     });
 });
@@ -419,7 +429,7 @@ describe("DbRowParser - Object like rows", function() {
                 city: "in a nice city"
             };
 
-            authorParser.parseRow(row);
+            authorParser.parse(row);
             authorParser.end();
         });
         it("should have mapped properly the row", function() {

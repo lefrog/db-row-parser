@@ -26,7 +26,7 @@ module.exports = DbRowParserStream;
 
 DbRowParserStream.prototype._transform = function(row, encoding, cb) {
     this._pushQueuedObject();
-    this._rowParser.parseRow(row);
+    this._rowParser.parse(row);
     cb();
 }
 

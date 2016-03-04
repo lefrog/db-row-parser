@@ -71,9 +71,9 @@ userParser.on("new-object", obj => {
   console.log(obj);
 });
 rows.forEach(row => {
-  userParser.parseRow(row);
+  userParser.parse(row);
 });
-userParser.end();
+userParser.done();
 ```
 
 ## Parse Flatten Object
@@ -178,10 +178,10 @@ A row parser to convert a flatten object (array) into an Object graph.
       * reference another parser but inside an array in order to signal the parser there is going to be multiple children using this parser.
 
 
-#### DbRowParser.parseRow(array)
+#### DbRowParser.parse(array)
 Return inflated object from the array.
 
-#### DbRowParser.end()
+#### DbRowParser.done()
 Signal parser we're done parsing the collection of rows. This will emit the current object.
 
 #### Event: new-object
@@ -215,7 +215,7 @@ Where array[0] == blog.id, array[1] == blog.text, array[2] == blog.comments.user
   ]
 }
 ```
-And after parsing the 3rd row calling ```.end()``` will emit the object for the 3rd row namely:
+And after parsing the 3rd row calling ```.done()``` will emit the object for the 3rd row namely:
 ```
 {
   id: 2,

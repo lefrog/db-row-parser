@@ -33,6 +33,12 @@ const SingleValueParser = require("./SingleValueParser");
 const ArrayParser = require("./ArrayParser");
 const ObjectParser = require("./ObjectParser");
 
+DbRowParser.prototype.done = function() {
+    this.end();
+    this._currentObj = null;
+    this._key = null;
+}
+
 DbRowParser.prototype.end = function() {
     if (this._currentObj == null) {
         return;
@@ -41,7 +47,7 @@ DbRowParser.prototype.end = function() {
     this.emit("new-object", this._currentObj);
 }
 
-DbRowParser.prototype.parseRow = function(row) {
+DbRowParser.prototype.parse = function(row) {
     let key = row[this._key];
 
     if (key === this._previousKey) {
