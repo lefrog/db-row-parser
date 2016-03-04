@@ -39,7 +39,6 @@ DbRowParser.prototype.end = function() {
     }
 
     this.emit("new-object", this._currentObj);
-    this._currentObj = null;
 }
 
 DbRowParser.prototype.parseRow = function(row) {
@@ -52,11 +51,13 @@ DbRowParser.prototype.parseRow = function(row) {
 
     if (key == null) {
         this.end();
+        this._currentObj = null;
         return;
     }
 
     if (key !== this._previousKey) {
         this.end();
+        this._currentObj = null;
     }
 
     this._previousKey = key;

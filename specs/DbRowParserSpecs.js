@@ -336,7 +336,7 @@ describe("DbRowParser - Array like rows", function() {
         });
     });
 
-    describe.only("when re-use parser on different set of rows", function() {
+    describe("when re-use parser on different set of rows", function() {
         let firstSet = [1, "Parent 1", 10, "Child 10"];
         let secondSet = [2, "Parent 2", 20, "Child 20"];
 
