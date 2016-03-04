@@ -321,13 +321,67 @@ describe("DbRowParser - Array like rows", function() {
             assert.equal(author1.address.street, "123 on the street");
         });
         it("should have mapped author1 blogs", function() {
+            assert.equal(author1.blogs.length, 2);
             assert.equal(author1.blogs[0].blogId, 10);
             assert.equal(author1.blogs[1].blogId, 11);
-        })
+        });
         it("should have mapped author2", function() {
             assert.equal(author2.authorId, 2);
             assert.equal(author2.name, "bar@example.com");
             assert.ok(Array.isArray(author2.blogs));
+        });
+        it("should have mapped author2 blogs", function() {
+            assert.equal(author2.blogs.length, 1);
+            assert.equal(author2.blogs[0].blogId, 20);
+        });
+    });
+
+    describe.only("when re-use parser on different set of rows", function() {
+        let firstSet = [1, "Parent 1", 10, "Child 10"];
+        let secondSet = [2, "Parent 2", 20, "Child 20"];
+
+        let childParser = new DbRowParser({
+            key: 2,
+            properties: {
+                id: 2,
+                name: 3
+            }
+        });
+
+        let parentParser = new DbRowParser({
+            key: 0,
+            properties: {
+                id: 0,
+                name: 1,
+                children: [childParser]
+            }
+        });
+
+        let newObject;
+        parentParser.on("new-object", obj => {
+            newObject = obj;
+        });
+
+        it("should parser ok the first time", function() {
+            parentParser.parseRow(firstSet);
+            parentParser.end();
+
+            assert.equal(1, newObject.id);
+            assert.equal("Parent 1", newObject.name);
+            assert.equal(1, newObject.children.length);
+            assert.equal(10, newObject.children[0].id);
+            assert.equal("Child 10", newObject.children[0].name);
+        });
+
+        it("should parser ok the second time", function() {
+            parentParser.parseRow(secondSet);
+            parentParser.end();
+
+            assert.equal(2, newObject.id);
+            assert.equal("Parent 2", newObject.name);
+            assert.equal(1, newObject.children.length);
+            assert.equal(20, newObject.children[0].id);
+            assert.equal("Child 20", newObject.children[0].name);
         });
     });
 });
